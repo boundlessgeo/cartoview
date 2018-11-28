@@ -24,6 +24,7 @@ RUN apt-get install -y \
         --no-install-recommends
 # upgrade pip to latest version
 RUN pip install --upgrade pip
+RUN pip install celery
 RUN mkdir /code
 COPY . /cartoview
 WORKDIR /cartoview
