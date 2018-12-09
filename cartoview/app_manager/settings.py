@@ -18,14 +18,11 @@ standard_library.install_aliases()
 
 # BASE_DIR must be defined in project.settings
 
-CARTOVIEW_APPS = ()
-APPS_SETTINGS = []
-
 
 def load_apps(APPS_DIR):
     from cartoview.apps_handler.handlers import CartoApps, apps_orm
-    global CARTOVIEW_APPS
-    global APPS_SETTINGS
+    CARTOVIEW_APPS = ()
+    APPS_SETTINGS = []
     create_apps_dir(APPS_DIR)
     if APPS_DIR not in sys.path:
         sys.path.append(APPS_DIR)
@@ -62,3 +59,4 @@ def load_apps(APPS_DIR):
         except Exception as e:
             print(e.message)
             logger.error(e.message)
+    return CARTOVIEW_APPS, APPS_SETTINGS

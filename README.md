@@ -63,12 +63,9 @@
 
             STATICFILES_DIRS += cartoview_settings.CARTOVIEW_STATIC_DIRS
 
-            from cartoview import app_manager
+            from cartoview.app_manager.settings import load_apps
             from past.builtins import execfile
-            app_manager_settings = os.path.join(
-                os.path.dirname(app_manager.__file__), "settings.py")
-            execfile(os.path.realpath(app_manager_settings))
-            load_apps(APPS_DIR)
+            CARTOVIEW_APPS, APPS_SETTINGS = load_apps(APPS_DIR)
             INSTALLED_APPS += CARTOVIEW_APPS
             for settings_file in APPS_SETTINGS:
                 try:
