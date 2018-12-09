@@ -7,9 +7,6 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from cartoview.log_handler import get_logger
-
-pending_yaml = settings.PENDING_APPS
-
 logger = get_logger(__name__)
 
 
