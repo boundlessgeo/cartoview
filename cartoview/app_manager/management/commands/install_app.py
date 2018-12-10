@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from cartoview.app_manager.installer import AppInstaller
 from cartoview.app_manager.models import App, AppStore
 from cartoview.log_handler import get_logger
-from packaging import version
+from pkg_resources import parse_version
 
 logger = get_logger(__name__)
 
