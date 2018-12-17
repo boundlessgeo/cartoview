@@ -1,11 +1,5 @@
 {% extends "app_manager/appinstance_base.html" %}
-{% load i18n %}
-{% load dialogos_tags %}
-{% load agon_ratings_tags %}
-{% load bootstrap_tags %}
-{% load url from future %}
-{% load base_tags %}
-{% load guardian_tags %}
+{% load i18n dialogos_tags agon_ratings_tags bootstrap_tags base_tags guardian_tags %}
 
 {% block title %}{{ resource.title }} — {{ block.super }}{% endblock %}
 
