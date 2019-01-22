@@ -60,4 +60,3 @@ def load_apps(APPS_DIR):
         except Exception as e:
             print(e.message)
             logger.error(e.message)
-    return CARTOVIEW_APPS, APPS_SETTINGS
