@@ -8,8 +8,6 @@ import sys
 
 from future import standard_library
 from past.builtins import execfile
-
-from cartoview.apps_handler.utils import create_apps_dir
 from cartoview.log_handler import get_logger
 
 logger = get_logger(__name__, with_formatter=True)
@@ -17,12 +15,15 @@ logger = get_logger(__name__, with_formatter=True)
 standard_library.install_aliases()
 
 # BASE_DIR must be defined in project.settings
+CARTOVIEW_APPS = ()
+APPS_SETTINGS = []
 
 
 def load_apps(APPS_DIR):
+    from cartoview.apps_handler.utils import create_apps_dir
     from cartoview.apps_handler.handlers import CartoApps, apps_orm
-    CARTOVIEW_APPS = ()
-    APPS_SETTINGS = []
+    global CARTOVIEW_APPS
+    global APPS_SETTINGS
     create_apps_dir(APPS_DIR)
     if APPS_DIR not in sys.path:
         sys.path.append(APPS_DIR)
