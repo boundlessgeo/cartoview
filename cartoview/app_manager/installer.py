@@ -21,13 +21,14 @@ from django.db import transaction
 from django.db.models import Max
 from future import standard_library
 
-from cartoview.apps_handler.handlers import CartoApps, apps_orm
+from cartoview.apps_handler.config import CartoviewApp
 from cartoview.log_handler import get_logger
 from cartoview.store_api.api import StoreAppResource, StoreAppVersion
 
 from .decorators import restart_enabled, rollback_on_failure
 from .models import App, AppStore, AppType
-from .req_installer import ReqInstaller
+from .req_installer import (ReqFileException, ReqFilePermissionException,
+                            ReqInstaller)
 
 logger = get_logger(__name__)
 install_app_batch = getattr(settings, 'INSTALL_APP_BAT', None)
@@ -210,21 +211,19 @@ class AppInstaller(object):
 
     @rollback_on_failure
     def add_carto_app(self):
-        with apps_orm.session() as session:
-            if not CartoApps.app_exists(self.name):
-                carto_app = CartoApps(
-                    name=self.name,
-                    active=True,
-                    order=self.get_app_order(),
-                    pending=True)
-                session.add(carto_app)
-                session.commit()
-            else:
-                carto_app = session.query(CartoApps).filter(
-                    CartoApps.name == self.name).update({
-                        "pending": True
-                    })
-                session.commit()
+        if not CartoviewApp.objects.app_exists(self.name):
+            CartoviewApp({
+                'name': self.name,
+                'active': True,
+                'order': self.get_app_order(),
+                'pending': True
+            })
+            CartoviewApp.save()
+        else:
+            carto_app = CartoviewApp.objects.get(self.name)
+            carto_app.pending = True
+            carto_app.commit()
+            CartoviewApp.save()
 
     @rollback_on_failure
     def add_app(self):
@@ -242,7 +241,9 @@ class AppInstaller(object):
         return app
 
     def _rollback(self):
-        CartoApps.delete_app(self.name)
+        app = CartoviewApp.objects.pop(self.name, None)
+        if app:
+            CartoviewApp.save()
         self.delete_app_dir()
 
     @rollback_on_failure
@@ -280,9 +281,15 @@ class AppInstaller(object):
         # TODO:add requirement file name as settings var
         req_file = os.path.join(self.app_dir, "req.txt")
         libs_dir = os.path.join(self.app_dir, "libs")
+
         if os.path.exists(req_file) and access(req_file, R_OK):
-            req_installer = ReqInstaller(req_file, target=libs_dir)
-            req_installer.install_all()
+            try:
+                req_installer = ReqInstaller(req_file, target=libs_dir)
+                req_installer.install_all()
+            except BaseException as e:
+                if not (isinstance(e, ReqFileException)
+                        or isinstance(e, ReqFilePermissionException)):  # noqa
+                    raise e
 
     @rollback_on_failure
     def check_then_finlize(self, restart, installed_apps):
@@ -309,6 +316,8 @@ class AppInstaller(object):
         self.delete_app()
         self.delete_app_tables()
         self.delete_app_dir()
+        CartoviewApp.objects.pop(self.name, None)
+        CartoviewApp.save()
 
     def execute_command(self, command):
         project_dir = None
