@@ -27,7 +27,8 @@ from cartoview.store_api.api import StoreAppResource, StoreAppVersion
 
 from .decorators import restart_enabled, rollback_on_failure
 from .models import App, AppStore, AppType
-from .req_installer import ReqInstaller
+from .req_installer import (ReqFileException, ReqFilePermissionException,
+                            ReqInstaller)
 
 logger = get_logger(__name__)
 install_app_batch = getattr(settings, 'INSTALL_APP_BAT', None)
@@ -280,13 +281,15 @@ class AppInstaller(object):
         # TODO:add requirement file name as settings var
         req_file = os.path.join(self.app_dir, "req.txt")
         libs_dir = os.path.join(self.app_dir, "libs")
+
         if os.path.exists(req_file) and access(req_file, R_OK):
-            req_installer = ReqInstaller(req_file, target=libs_dir)
-            req_installer.install_all()
-        except BaseException as e:
-            if not (isinstance(e, ReqFileException)
-                    or isinstance(e, ReqFilePermissionException)):
-                raise e
+            try:
+                req_installer = ReqInstaller(req_file, target=libs_dir)
+                req_installer.install_all()
+            except BaseException as e:
+                if not (isinstance(e, ReqFileException)
+                        or isinstance(e, ReqFilePermissionException)):  # noqa
+                    raise e
 
     @rollback_on_failure
     def check_then_finlize(self, restart, installed_apps):
